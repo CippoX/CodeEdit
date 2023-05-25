@@ -14,7 +14,7 @@ class SourceControlAccount: Codable, Identifiable, Hashable, ObservableObject {
         description: String,
         provider: Provider,
         serverURL: String,
-        urlProtocol: Bool,
+        urlProtocol: URLProtocol,
         sshKey: String,
         isTokenValid: Bool
     ) {
@@ -48,9 +48,14 @@ class SourceControlAccount: Codable, Identifiable, Hashable, ObservableObject {
     var serverURL: String
     // TODO: Should we use an enum instead of a boolean here:
     // If true we use the HTTP protocol else if false we use SSH
-    var urlProtocol: Bool
+    var urlProtocol: URLProtocol
     var sshKey: String
     var isTokenValid: Bool
+
+    enum URLProtocol: String, Codable, CaseIterable {
+        case https = "HTTPS"
+        case ssh = "SSH"
+    }
 
     enum Provider: Codable, CaseIterable, Identifiable {
         case bitbucketCloud
@@ -106,6 +111,23 @@ class SourceControlAccount: Codable, Identifiable, Hashable, ObservableObject {
                 return nil
             case .gitlab:
                 return URL(string: "https://www.gitlab.com/")!
+            case .gitlabSelfHosted:
+                return nil
+            }
+        }
+
+        var apiURL: URL? {
+            switch self {
+            case .bitbucketCloud:
+                return URL(string: "https://api.bitbucket.org/2.0/")!
+            case .bitbucketServer:
+                return nil
+            case .github:
+                return URL(string: "https://api.github.com/")!
+            case .githubEnterprise:
+                return nil
+            case .gitlab:
+                return URL(string: "https://gitlab.com/api/v4/")!
             case .gitlabSelfHosted:
                 return nil
             }

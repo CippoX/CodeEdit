@@ -14,13 +14,17 @@ import SwiftUI
 // - TODO: TabBarItemView drop-outside event handler.
 struct TabBarView: View {
 
-    @Environment(\.modifierKeys) var modifierKeys
-
-    typealias TabID = WorkspaceClient.FileItem.ID
+    typealias TabID = CEWorkspaceFile.ID
 
     /// The height of tab bar.
     /// I am not making it a private variable because it may need to be used in outside views.
     static let height = 28.0
+
+    @Environment(\.modifierKeys)
+    var modifierKeys
+
+    @Environment(\.splitEditor)
+    var splitEditor
 
     @Environment(\.colorScheme)
     private var colorScheme
@@ -37,8 +41,6 @@ struct TabBarView: View {
 
     @EnvironmentObject
     private var tabgroup: TabGroupData
-
-    @Environment(\.splitEditor) var splitEditor
 
     @AppSettings(\.general.tabBarStyle) var tabBarStyle
 
@@ -471,7 +473,7 @@ struct TabBarView: View {
                         } label: {
                             HStack {
                                 tab.icon
-                                Text(tab.fileName)
+                                Text(tab.name)
                             }
                         }
                     }
@@ -500,7 +502,7 @@ struct TabBarView: View {
                         } label: {
                             HStack {
                                 tab.icon
-                                Text(tab.fileName)
+                                Text(tab.name)
                             }
                         }
                     }
@@ -535,23 +537,9 @@ struct TabBarView: View {
 
     private var trailingAccessories: some View {
         HStack(spacing: 2) {
-            TabBarAccessoryIcon(
-                icon: .init(systemName: "ellipsis.circle"),
-                action: {} // TODO: Implement
-            )
-            .foregroundColor(.secondary)
-            .buttonStyle(.plain)
-            .help("Options")
-            TabBarAccessoryIcon(
-                icon: .init(systemName: "arrow.left.arrow.right.square"),
-                action: {} // TODO: Implement
-            )
-            .foregroundColor(.secondary)
-            .buttonStyle(.plain)
-            .help("Enable Code Review")
             splitviewButton
         }
-        .padding(.horizontal, 5)
+        .padding(.horizontal, 10)
         .opacity(activeState != .inactive ? 1.0 : 0.5)
         .frame(maxHeight: .infinity) // Fill out vertical spaces.
         .background {
@@ -565,14 +553,18 @@ struct TabBarView: View {
         Group {
             switch (tabgroup.parent?.axis, modifierKeys.contains(.option)) {
             case (.horizontal, true), (.vertical, false):
-                TabBarAccessoryIcon(icon: Image(systemName: "square.split.1x2")) {
+                Button {
                     split(edge: .bottom)
+                } label: {
+                    Image(systemName: "square.split.1x2")
                 }
                 .help("Split Vertically")
 
             case (.vertical, true), (.horizontal, false):
-                TabBarAccessoryIcon(icon: Image(systemName: "square.split.2x1")) {
+                Button {
                     split(edge: .trailing)
+                } label: {
+                    Image(systemName: "square.split.2x1")
                 }
                 .help("Split Horizontally")
 
@@ -580,8 +572,7 @@ struct TabBarView: View {
                 EmptyView()
             }
         }
-        .foregroundColor(.secondary)
-        .buttonStyle(.plain)
+        .buttonStyle(.icon)
     }
 
     func split(edge: Edge) {
